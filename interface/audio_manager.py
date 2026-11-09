@@ -34,6 +34,9 @@ class AudioManager:
     def busy(self):
         return self.pygame.mixer.music.get_busy()
 
-    def close(self):
+    def stop(self):
         self.pygame.mixer.music.stop()
+
+    def close(self):
+        self.stop()
         self.pygame.mixer.quit()
