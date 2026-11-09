@@ -2,6 +2,7 @@
 
 - [자동 채보 도구 README](tools/README.md)
 - [싱크 보정 README](README.sync.md)
+- [팀 협업 가이드](README.collaboration.md) — 기능 연결 방법, 수정 범위, AI 작업 요청 예시
 
 OpenCV로 웹캠의 색상 마커를 추적해 플레이하는 비접촉식 4레인 리듬게임입니다. 손을 내려치는 **TAP**과 같은 위치를 유지하는 **HOLD**를 지원하며, 현재는 기본 기능을 구현한 프로토타입 단계입니다.
 
@@ -113,6 +114,7 @@ gesture/       TAP 검출과 타이밍 판정
 game/          채보 로드, 노트 상태, 점수·콤보
 interface/     음원 재생과 화면 출력
 charts/        JSON 채보
+tools/         자동 채보 생성과 분석 진단
 tests/         핵심 로직 테스트
 ```
 
