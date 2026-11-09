@@ -2,13 +2,13 @@ from gesture.judgement import judge
 
 
 class GameManager:
-    def __init__(self, notes):
+    def __init__(self, notes, *, single_hand=False):
         self.notes = [dict(n, state="pending") for n in notes]
         self.score = self.combo = self.max_combo = 0
         self.counts = {"PERFECT": 0, "GOOD": 0, "MISS": 0}
         self.success = {"tap": 0, "hold": 0}
-        self.active = None
-        self.last_valid = None
+        self.single_hand = single_hand
+        self.active = {}
         self.feedback = "READY"
 
     def result(self, note, grade):
@@ -24,7 +24,7 @@ class GameManager:
             self.success[note["type"]] += 1
 
     def hit(self, lane, now):
-        if self.active is not None:
+        if lane in self.active or (self.single_hand and self.active):
             return
         candidates = [n for n in self.notes if n["state"] == "pending"
                       and n["lane"] == lane and abs(n["time"] - now) <= 0.2 + 1e-9]
@@ -35,29 +35,25 @@ class GameManager:
         if note["type"] == "hold":
             note["state"] = "holding"
             note["grade"] = grade
-            self.active, self.last_valid = note, now
+            self.active[lane] = (note, now)
             self.feedback = "HOLDING"
         else:
             self.result(note, grade)
 
-    def update(self, now, held_lane):
-        if self.active is not None:
-            note = self.active
+    def update(self, now, held_lanes):
+        for lane, (note, last_valid) in list(self.active.items()):
             end = note["time"] + note["duration"]
             # Evaluate only the interval through the scheduled end.
             check_time = min(now, end)
-            if held_lane == note["lane"]:
-                # A long frame gap cannot establish continuous tracking.
-                valid = check_time - self.last_valid <= 0.2 + 1e-9
-                self.last_valid = check_time
-            else:
-                valid = check_time - self.last_valid <= 0.2 + 1e-9
-            if not valid:
+            # A long frame gap cannot establish continuous tracking.
+            if check_time - last_valid > 0.2 + 1e-9:
                 self.result(note, "MISS")
-                self.active = None
+                del self.active[lane]
             elif now >= end:
                 self.result(note, note["grade"])
-                self.active = None
+                del self.active[lane]
+            elif lane in held_lanes:
+                self.active[lane] = (note, check_time)
         for note in self.notes:
             if note["state"] == "pending" and now - note["time"] > 0.2 + 1e-9:
                 self.result(note, "MISS")

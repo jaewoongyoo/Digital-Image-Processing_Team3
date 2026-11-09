@@ -3,3 +3,4 @@
 __pycache__/
 .pytest_cache/
 assets/demo.wav
+/.sync-calibration.json

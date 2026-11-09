@@ -1,5 +1,8 @@
 # Hand Beat
 
+- [자동 채보 도구 README](tools/README.md)
+- [싱크 보정 README](README.sync.md)
+
 OpenCV로 웹캠의 색상 마커를 추적해 플레이하는 비접촉식 4레인 리듬게임입니다. 손을 내려치는 **TAP**과 같은 위치를 유지하는 **HOLD**를 지원하며, 현재는 기본 기능을 구현한 프로토타입 단계입니다.
 
 ## 주요 기능
@@ -75,9 +78,14 @@ python main.py --camera 1
 # 차트 시계를 음원 재생 호출보다 100ms 늦춤
 python main.py --audio-offset-ms 100
 
+# 120 BPM 데모를 듣고 SPACE로 입력 싱크 보정
+python main.py --calibrate
+
 # 다른 채보 사용
 python main.py --chart charts/my_song.json
 ```
+
+싱크 보정 창에서 `SPACE`로 데모를 시작하고, 처음 네 박을 들은 뒤 클릭마다 `SPACE`를 누릅니다. 결과에서 `Enter`를 누르면 로컬 보정값을 저장하고 이후 실행에 자동 적용합니다. `R`은 다시 측정, `Esc`는 취소입니다. `--audio-offset-ms 0`처럼 값을 직접 지정하면 해당 실행에서 저장값을 덮어씁니다. 이 값은 키보드로 측정하며 웹캠 추적 지연은 별도로 측정해야 합니다.
 
 ## 음원 및 채보
 
@@ -94,7 +102,7 @@ python main.py --chart charts/my_song.json
 }
 ```
 
-`lane`은 왼쪽부터 0~3, `time`은 음악 시작 기준 타격 시각(초), `duration`은 HOLD 길이(초)입니다. ID는 중복되지 않아야 하며 동시 타격이나 HOLD 도중 다른 노트를 배치하지 않습니다. 외부 음원은 사용·공유 가능한 라이선스를 확인합니다.
+`lane`은 왼쪽부터 0~3, `time`은 음악 시작 기준 타격 시각(초), `duration`은 HOLD 길이(초)입니다. ID는 중복되지 않아야 합니다. 키보드 모드에서는 서로 다른 레인의 동시 TAP·HOLD를 지원합니다. 웹캠 모드는 한 손 플레이를 기준으로 모든 레인의 노트가 서로 겹치지 않아야 합니다. 외부 음원은 사용·공유 가능한 라이선스를 확인합니다.
 
 ## 프로젝트 구조
 

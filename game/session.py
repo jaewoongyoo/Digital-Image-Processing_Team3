@@ -19,7 +19,7 @@ from vision import webcam
 def run(chart_path, keyboard, camera_index, audio_offset_ms, demo_path):
     camera = audio = None
     try:
-        chart = load_chart(chart_path)
+        chart = load_chart(chart_path, single_hand=not keyboard)
         if Path(chart['audio']).resolve() == demo_path.resolve() and not demo_path.exists():
             create_demo(demo_path)
         audio = AudioManager(chart['audio'])
@@ -44,7 +44,8 @@ def run(chart_path, keyboard, camera_index, audio_offset_ms, demo_path):
 
 
 def play(notes, audio, camera, audio_offset):
-    game, detector = GameManager(notes), GestureDetector()
+    single_hand = camera is not None
+    game, detector = GameManager(notes, single_hand=single_hand), GestureDetector()
     state, start, previous = 'ready', 0.0, time.monotonic()
     while True:
         stamp = time.monotonic()
@@ -60,7 +61,7 @@ def play(notes, audio, camera, audio_offset):
             break
         if controls.reset:
             audio.stop()
-            game, detector = GameManager(notes), GestureDetector()
+            game, detector = GameManager(notes, single_hand=single_hand), GestureDetector()
             state = 'ready'
         if controls.begin and state == 'ready':
             start, state = stamp + 3, 'countdown'
@@ -72,17 +73,17 @@ def play(notes, audio, camera, audio_offset):
 
         now = stamp - start - audio_offset
         if state == 'playing':
-            held = None
+            held = set()
             if camera is None:
-                held = keyboard_input.held_lane()
+                held = keyboard_input.held_lanes()
             elif point is not None and 320 <= point[1] < 480:
-                held = min(3, point[0] // 160)
-            lane = detector.update(point, stamp, game.active is not None)
+                held.add(min(3, point[0] // 160))
+            game.update(now, held)
+            lane = detector.update(point, stamp, bool(game.active))
             for hit_lane in controls.pressed:
                 game.hit(hit_lane, now)
             if lane is not None:
                 game.hit(lane, now)
-            game.update(now, held)
             if game.finished and not audio.busy():
                 state = 'result'
         cv2.imshow('Hand Beat', draw(frame, game, now, state, point, fps))

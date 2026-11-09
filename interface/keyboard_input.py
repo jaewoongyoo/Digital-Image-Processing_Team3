@@ -39,6 +39,6 @@ def poll():
     return controls
 
 
-def held_lane():
+def held_lanes():
     down = pygame.key.get_pressed()
-    return next((i for i, key in enumerate(LANE_KEYS) if down[key]), None)
+    return {i for i, key in enumerate(LANE_KEYS) if down[key]}
