@@ -1,8 +1,9 @@
 """Camera coordinates use a mirrored 640 x 480 frame."""
+from settings import HIT_Y, RESET_Y
 
 
 class GestureDetector:
-    def __init__(self, hit_y=340, reset_y=260, min_speed=180):
+    def __init__(self, hit_y=HIT_Y, reset_y=RESET_Y, min_speed=180):
         self.hit_y, self.reset_y, self.min_speed = hit_y, reset_y, min_speed
         self.ready = False
         self.previous = None

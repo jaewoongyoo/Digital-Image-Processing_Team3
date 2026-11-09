@@ -1,4 +1,5 @@
 import cv2
+from settings import HIT_Y, RESET_Y
 
 
 def text(frame, label, y, scale=0.65):
@@ -9,17 +10,17 @@ def draw(frame, game, now, state, point, fps):
     frame = (frame * 0.35).astype('uint8')
     for x in (160, 320, 480):
         cv2.line(frame, (x, 90), (x, 480), (95, 95, 95), 1)
-    cv2.line(frame, (0, 340), (640, 340), (0, 220, 255), 3)
-    cv2.line(frame, (0, 260), (640, 260), (100, 100, 100), 1)
+    cv2.line(frame, (0, HIT_Y), (640, HIT_Y), (0, 220, 255), 3)
+    cv2.line(frame, (0, RESET_Y), (640, RESET_Y), (100, 100, 100), 1)
     if state == 'playing':
         for note in game.notes:
             if note['state'] not in ('pending', 'holding'):
                 continue
             x = note['lane'] * 160 + 80
-            y = int(340 - 180 * (note['time'] - now))
+            y = int(HIT_Y - 180 * (note['time'] - now))
             if note['type'] == 'hold':
-                end_y = int(340 - 180 * (note['time'] + note['duration'] - now))
-                cv2.line(frame, (x, max(-1000, end_y)), (x, min(340, y)), (180, 100, 230), 24)
+                end_y = int(HIT_Y - 180 * (note['time'] + note['duration'] - now))
+                cv2.line(frame, (x, max(-1000, end_y)), (x, min(HIT_Y, y)), (180, 100, 230), 24)
             if -20 <= y <= 480:
                 cv2.rectangle(frame, (x - 55, y - 8), (x + 55, y + 8), (255, 220, 60), -1)
         text(frame, f'{now:.1f}s   {game.feedback}', 115)

@@ -3,6 +3,7 @@ import argparse
 from pathlib import Path
 import sys
 import time
+from settings import DISPLAY_WIDTH, DISPLAY_HEIGHT, HOLD_TOP
 
 ROOT = Path(__file__).resolve().parent
 
@@ -38,7 +39,8 @@ def main():
             camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
             if not camera.isOpened():
                 raise RuntimeError('Cannot open webcam. Try --keyboard or --camera 1.')
-        cv2.namedWindow('Hand Beat')
+        cv2.namedWindow('Hand Beat', cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
+        cv2.resizeWindow('Hand Beat', DISPLAY_WIDTH, DISPLAY_HEIGHT)
         if camera is not None:
             cv2.namedWindow('HSV settings')
             for name, value, limit in [('H low', 35, 179), ('H high', 85, 179),
@@ -101,7 +103,7 @@ def main():
                 if camera is None:
                     down = pygame.key.get_pressed()
                     held = next((i for i, key in enumerate(keys) if down[key]), None)
-                elif point is not None and 320 <= point[1] < 480:
+                elif point is not None and HOLD_TOP <= point[1] < 480:
                     held = min(3, point[0] // 160)
                 lane = detector.update(point, stamp, game.active is not None)
                 for hit_lane in pressed + ([] if lane is None else [lane]):
