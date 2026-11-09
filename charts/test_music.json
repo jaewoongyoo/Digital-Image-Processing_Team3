@@ -1,0 +1,17 @@
+{
+  "title": "Hand Beat - Original Demo 120 BPM",
+  "audio": "../assets/demo.wav",
+  "notes": [
+    {"id": 1, "type": "tap", "lane": 0, "time": 2.0},
+    {"id": 2, "type": "tap", "lane": 1, "time": 3.0},
+    {"id": 3, "type": "tap", "lane": 2, "time": 4.0},
+    {"id": 4, "type": "tap", "lane": 3, "time": 5.0},
+    {"id": 5, "type": "hold", "lane": 1, "time": 6.0, "duration": 2.0},
+    {"id": 6, "type": "tap", "lane": 3, "time": 9.0},
+    {"id": 7, "type": "tap", "lane": 2, "time": 10.0},
+    {"id": 8, "type": "hold", "lane": 0, "time": 11.0, "duration": 2.0},
+    {"id": 9, "type": "tap", "lane": 1, "time": 14.0},
+    {"id": 10, "type": "tap", "lane": 2, "time": 15.0},
+    {"id": 11, "type": "hold", "lane": 3, "time": 16.0, "duration": 2.0}
+  ]
+}
