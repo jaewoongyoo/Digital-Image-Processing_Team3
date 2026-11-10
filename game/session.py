@@ -77,17 +77,17 @@ def play(notes, audio, camera, audio_offset):
         now = stamp - start - audio_offset
         held_lanes = set()
         if state == 'playing':
+            down = pygame.key.get_pressed()
+            held_lanes = {i for i, key in enumerate(keyboard_input.LANE_KEYS) if down[key]}
             held = None
-            if camera is None:
-                down = pygame.key.get_pressed()
-                held_lanes = {i for i, key in enumerate(keyboard_input.LANE_KEYS) if down[key]}
-                held = next((i for i in range(4) if i in held_lanes), None)
-            elif point is not None and HOLD_TOP <= point[1] < 480:
+            if camera is not None and point is not None and HOLD_TOP <= point[1] < 480:
                 held = min(3, point[0] // 160)
             lane = detector.update(point, stamp, game.active is not None)
             for hit_lane in controls.pressed + ([] if lane is None else [lane]):
                 effects.trigger(hit_lane, stamp)
                 game.hit(hit_lane, now)
+            if game.active is not None and game.active['lane'] in held_lanes:
+                held = game.active['lane']
             game.update(now, held)
             if game.active is not None and held == game.active['lane']:
                 held_lanes.add(held)

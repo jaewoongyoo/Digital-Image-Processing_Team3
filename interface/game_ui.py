@@ -13,6 +13,22 @@ def rounded_rect(frame, left, top, right, bottom, radius, color):
             cv2.circle(frame, (x, y), radius, color, -1, cv2.LINE_AA)
 
 
+def draw_note(frame, x, y):
+    """Draw a compact, illuminated version of the silver-rimmed receptor."""
+    left, right = x - 58, x + 58
+    rounded_rect(frame, left - 2, y - 8, right + 2, y + 15, 10, (12, 13, 16))
+    rounded_rect(frame, left, y - 11, right, y + 11, 10, (105, 110, 114))
+    rounded_rect(frame, left + 2, y - 10, right - 2, y + 8, 8, (205, 220, 222))
+    rounded_rect(frame, left + 4, y - 9, right - 4, y + 6, 7, (38, 48, 50))
+    rounded_rect(frame, left + 6, y - 8, right - 6, y + 4, 6, (220, 230, 65))
+    rounded_rect(frame, left + 9, y - 7, right - 9, y + 1, 4, (245, 245, 155))
+    # Dark central inset and bright edge give the cap the reference's depth.
+    cv2.rectangle(frame, (x - 18, y - 8), (x + 18, y - 3), (40, 55, 58), -1)
+    cv2.line(frame, (left + 14, y - 6), (x - 22, y - 6), (255, 255, 225), 1, cv2.LINE_AA)
+    cv2.line(frame, (x + 22, y - 6), (right - 14, y - 6), (255, 255, 225), 1, cv2.LINE_AA)
+    cv2.line(frame, (left + 13, y + 8), (right - 13, y + 8), (210, 220, 220), 1, cv2.LINE_AA)
+
+
 class PadEffects:
     def __init__(self):
         self.strikes = [-float('inf')] * 4
@@ -75,11 +91,15 @@ def draw(frame, game, now, state, point, fps, effects=None, held_lanes=(), times
                 continue
             x = note['lane'] * 160 + 80
             y = int(HIT_Y - 180 * (note['time'] - now))
+            holding = note['state'] == 'holding'
+            if holding:
+                # The receptor consumes the head while the remaining tail approaches it.
+                y = HIT_Y
             if note['type'] == 'hold':
                 end_y = int(HIT_Y - 180 * (note['time'] + note['duration'] - now))
-                cv2.line(frame, (x, max(-1000, end_y)), (x, min(HIT_Y, y)), (180, 100, 230), 24)
-            if -20 <= y <= 480:
-                cv2.rectangle(frame, (x - 55, y - 8), (x + 55, y + 8), (255, 220, 60), -1)
+                cv2.line(frame, (x, max(-1000, min(HIT_Y, end_y))), (x, min(HIT_Y, y)), (180, 100, 230), 24)
+            if not holding and -20 <= y <= 480:
+                draw_note(frame, x, y)
         text(frame, f'{now:.1f}s   {game.feedback}', 115)
     active_lane = game.active['lane'] if game.active is not None else None
     strengths = effects.strengths(time.monotonic() if timestamp is None else timestamp, held_lanes) if effects else None
