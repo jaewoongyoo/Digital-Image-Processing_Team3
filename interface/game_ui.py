@@ -13,20 +13,46 @@ def rounded_rect(frame, left, top, right, bottom, radius, color):
             cv2.circle(frame, (x, y), radius, color, -1, cv2.LINE_AA)
 
 
-def draw_note(frame, x, y):
+def draw_note(frame, x, y, is_hold=False):
     """Draw a compact, illuminated version of the silver-rimmed receptor."""
     left, right = x - 58, x + 58
+    rim = (45, 205, 95) if is_hold else (205, 220, 222)
+    surface = (25, 205, 85) if is_hold else (220, 230, 65)
+    highlight = (110, 255, 185) if is_hold else (245, 245, 155)
     rounded_rect(frame, left - 2, y - 8, right + 2, y + 15, 10, (12, 13, 16))
     rounded_rect(frame, left, y - 11, right, y + 11, 10, (105, 110, 114))
-    rounded_rect(frame, left + 2, y - 10, right - 2, y + 8, 8, (205, 220, 222))
+    rounded_rect(frame, left + 2, y - 10, right - 2, y + 8, 8, rim)
     rounded_rect(frame, left + 4, y - 9, right - 4, y + 6, 7, (38, 48, 50))
-    rounded_rect(frame, left + 6, y - 8, right - 6, y + 4, 6, (220, 230, 65))
-    rounded_rect(frame, left + 9, y - 7, right - 9, y + 1, 4, (245, 245, 155))
+    rounded_rect(frame, left + 6, y - 8, right - 6, y + 4, 6, surface)
+    rounded_rect(frame, left + 9, y - 7, right - 9, y + 1, 4, highlight)
     # Dark central inset and bright edge give the cap the reference's depth.
     cv2.rectangle(frame, (x - 18, y - 8), (x + 18, y - 3), (40, 55, 58), -1)
     cv2.line(frame, (left + 14, y - 6), (x - 22, y - 6), (255, 255, 225), 1, cv2.LINE_AA)
     cv2.line(frame, (x + 22, y - 6), (right - 14, y - 6), (255, 255, 225), 1, cv2.LINE_AA)
     cv2.line(frame, (left + 13, y + 8), (right - 13, y + 8), (210, 220, 220), 1, cv2.LINE_AA)
+
+
+def draw_hold_tail(frame, x, top, bottom):
+    """Bright yellow sustain ribbon matching the green hold-note head."""
+    bottom = min(bottom, HIT_Y, frame.shape[0] - 1)
+    if bottom <= top or bottom < 0:
+        return
+    left, right = max(0, x - 20), min(frame.shape[1], x + 21)
+    visible_top = max(0, top)
+    if left >= right or visible_top >= bottom:
+        return
+    region = frame[visible_top:bottom + 1, left:right]
+    # Opaque gold edges and a lemon-yellow core remain visible over the camera.
+    distance = np.abs(np.arange(left, right, dtype=np.float32) - x) / 20
+    profile = np.clip((1 - distance) * 10, 0, 1)
+    alpha = np.broadcast_to(profile[None, :, None], region.shape[:2] + (1,))
+    edge = np.array((10, 155, 195), dtype=np.float32)
+    core = np.array((70, 255, 255), dtype=np.float32)
+    color = edge + (core - edge) * np.maximum(0, 1 - distance)[None, :, None]
+    region[:] = (region * (1 - alpha) + color * alpha).astype(np.uint8)
+    if 0 <= top < bottom:
+        cv2.ellipse(frame, (x, top), (19, min(5, bottom - top)), 0, 0, 180,
+                    (30, 245, 245), -1, cv2.LINE_AA)
 
 
 class PadEffects:
@@ -97,9 +123,9 @@ def draw(frame, game, now, state, point, fps, effects=None, held_lanes=(), times
                 y = HIT_Y
             if note['type'] == 'hold':
                 end_y = int(HIT_Y - 180 * (note['time'] + note['duration'] - now))
-                cv2.line(frame, (x, max(-1000, min(HIT_Y, end_y))), (x, min(HIT_Y, y)), (180, 100, 230), 24)
+                draw_hold_tail(frame, x, end_y, y)
             if not holding and -20 <= y <= 480:
-                draw_note(frame, x, y)
+                draw_note(frame, x, y, is_hold=note['type'] == 'hold')
         text(frame, f'{now:.1f}s   {game.feedback}', 115)
     active_lane = game.active['lane'] if game.active is not None else None
     strengths = effects.strengths(time.monotonic() if timestamp is None else timestamp, held_lanes) if effects else None
